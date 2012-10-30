@@ -39,6 +39,8 @@
 #include <mach/msm_battery.h>
 #endif
 #include <linux/ion.h>
+
+#define OMEGAMOON_CHANGED
 DEFINE_MUTEX(ctrl_cmd_lock);
 
 #define CAMERA_STOP_VIDEO 58
@@ -1991,6 +1993,7 @@ static int msm_get_sensor_info(struct msm_sync *sync, void __user *arg)
 #else
 	if(sdata->pdata->get_board_support_flash != NULL)
 	{
+		/*board support flash should be added as another condition*/
 		info.flash_enabled = (sdata->flash_data->flash_type != MSM_CAMERA_FLASH_NONE)
 			 && (true == sdata->pdata->get_board_support_flash());
 	}
@@ -2901,18 +2904,25 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 			rc = -EFAULT;
 		} else
 		{
-#ifdef CONFIG_ARCH_MSM7X30
-			if(machine_is_msm8255_u8680())
-			{
-#endif
+            /*Condition that the flash is tps61310 */
+#ifdef OMEGAMOON_CHANGED
+				printk("OMEGAMOON >>> this is the flashy part!!\n");
 				if(LED_FLASH == flash_info.flashtype)
 				{
 					CDBG("tps61310_set_flash enter");
 					rc = tps61310_set_flash(flash_info.ctrl_data.led_state);
 				}
-#ifdef CONFIG_ARCH_MSM7X30
+#else
+			if(machine_is_msm8255_u8680())
+			{
+				if(LED_FLASH == flash_info.flashtype)
+				{
+					CDBG("tps61310_set_flash enter");
+					rc = tps61310_set_flash(flash_info.ctrl_data.led_state);
+				}
 			}
 #endif
+            /*other flashes*/
 			else
 			{
 				CDBG("msm_flash_ctrl enter");
@@ -2947,6 +2957,7 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 }
 
 static int msm_unblock_poll_frame(struct msm_sync *);
+/*add this interface to do timeout reset sensor*/
 static int msm_reset_camera_esd(struct msm_sync *sync,void __user *arg)
 {
     int rc = -EINVAL;
@@ -3123,6 +3134,7 @@ static int __msm_release(struct msm_sync *sync)
 
 		wake_unlock(&sync->wake_lock);
 #ifdef CONFIG_HUAWEI_EVALUATE_POWER_CONSUMPTION 
+        /* turn down inside and outside camera consume */
         huawei_rpc_current_consuem_notify(EVENT_CAMERA_STATE, DEVICE_POWER_STATE_OFF);
 #endif
 		sync->apps_id = NULL;
@@ -3817,6 +3829,7 @@ static int __msm_open(struct msm_cam_device *pmsm, const char *const apps_id,
 			goto msm_open_err;
 		}
 #ifdef CONFIG_HUAWEI_EVALUATE_POWER_CONSUMPTION 
+        /* calculate consume for ins and outs camera */
         if(sync->sdata->slave_sensor) /* inside camera open */       
         {   
             huawei_rpc_current_consuem_notify(EVENT_INS_CAMERA_STATE, DEVICE_POWER_STATE_ON);
@@ -4026,6 +4039,7 @@ static int msm_sync_init(struct msm_sync *sync,
 		sync->sctrl = sctrl;
 	}
 	msm_camio_probe_off(pdev);
+	/*add a 10ms delay between camera probes for IOVDD to down*/
 	mdelay(10);
 	if (rc < 0) {
 		pr_err("%s: failed to initialize %s\n",

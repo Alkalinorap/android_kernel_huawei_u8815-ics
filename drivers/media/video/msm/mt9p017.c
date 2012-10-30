@@ -388,6 +388,7 @@ static int32_t mt9p017_lens_shading_enable(uint8_t is_enable)
     CDBG("%s: exiting. rc = %d\n", __func__, rc);
     return rc;
 }
+
 #ifndef MT9P017_OTP_SUPPORT
 static int32_t mt9p017_set_lc(void)
 {
@@ -401,10 +402,10 @@ static int32_t mt9p017_set_lc(void)
 #else
 #define TRUE    1
 #define FALSE   0
-//for read lens shading from eeprom 
+// for reading lens shading from eeprom 
 #define LC_TABLE_SIZE 106//equal to the size of mt9p017_lc_tbl - 1.
 static const unsigned short mt9p017_eeprom_table[LC_TABLE_SIZE] = {
-	0x3800,
+    0x3800,
     0x3802,
     0x3804,
     0x3806,
@@ -694,6 +695,7 @@ OTPERR:
     return rc;
 }
 #endif
+
 static int32_t mt9p017_load_pixel_timing(void)
 {
     int32_t rc;
@@ -1956,8 +1958,6 @@ static int mt9p017_sensor_probe(const struct msm_camera_sensor_info *info,
     }
     else
     {
-        /* camera name for project menu to display */
-        strncpy((char *)info->sensor_name, "23060069FA-MT-S", strlen("23060069FA-MT-S"));
         CDBG("camera sensor mt9p017 probe is succeed!!!\n");
     }
 #ifdef CONFIG_HUAWEI_HW_DEV_DCT

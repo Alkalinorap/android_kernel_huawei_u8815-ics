@@ -22,6 +22,7 @@
 #include <mach/camera.h>
 #include <mach/gpio.h>
 
+/*BU5D07741 descpription: camera flash light*/
 #ifdef CONFIG_HUAWEI_KERNEL
 
 #include <linux/mfd/pmic8058.h>
@@ -57,6 +58,10 @@ enum msm_cam_flash_stat{
 	MSM_CAM_FLASH_OFF,
 	MSM_CAM_FLASH_ON,
 };
+
+#if defined CONFIG_HUAWEI_FEATURE_TPS61310
+static struct i2c_client *tps61310_client;
+#endif
 
 #if defined CONFIG_MSM_CAMERA_FLASH_SC628A
 static struct i2c_client *sc628a_client;
@@ -351,11 +356,13 @@ static int msm_camera_flash_pwm(
 	int rc = 0;
 	int PWM_PERIOD = USEC_PER_SEC / pwm->freq;
 
+	/*description:pwm camera flash*/
 	#ifdef CONFIG_HUAWEI_KERNEL
 	static struct pwm_device *flash_pwm = NULL;
 	#else 
 	static struct pwm_device *flash_pwm;
 	#endif
+	/*If it is the first time to enter the function*/
 	if (!flash_pwm) {
 		#ifdef CONFIG_HUAWEI_KERNEL
 		rc = pm8xxx_gpio_config( 205, &camera_flash);
@@ -510,16 +517,19 @@ int32_t msm_camera_flash_set_led_state(
 	}
 
 #ifdef CONFIG_HUAWEI_EVALUATE_POWER_CONSUMPTION 
+    /* start calculate flash consume */
 	switch (led_state) {
 	case MSM_CAMERA_LED_OFF:
         huawei_rpc_current_consuem_notify(EVENT_CAMERA_FLASH_STATE, 0);
 		break;
 
 	case MSM_CAMERA_LED_LOW:
+        /* the consume depend on low_current */
         huawei_rpc_current_consuem_notify(EVENT_CAMERA_FLASH_STATE, fdata->flash_src->_fsrc.pmic_src.low_current);
 		break;
 
 	case MSM_CAMERA_LED_HIGH:
+        /* the consume depend on high_current */
         huawei_rpc_current_consuem_notify(EVENT_CAMERA_FLASH_STATE, fdata->flash_src->_fsrc.pmic_src.high_current);
 		break;
 
