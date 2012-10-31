@@ -30,7 +30,7 @@
 #define PM_GPIO26_PWM_ID  2
 #define ADD_VALUE			4
 #define PWM_LEVEL_ADJUST	226
-#define BL_MIN_LEVEL 	    15
+#define BL_MIN_LEVEL 	    30
 
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)     (pm_gpio + NR_GPIO_IRQS)
 
