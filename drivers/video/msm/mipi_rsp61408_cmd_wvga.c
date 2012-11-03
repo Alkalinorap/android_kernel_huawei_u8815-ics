@@ -1,3 +1,4 @@
+/*< DTS2011090203258 fengwei 20110903 begin */
 /* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -12,12 +13,15 @@
 
 #include "msm_fb.h"
 #include "mipi_dsi.h"
-#include "hw_lcd_common.h"
+#include "hw_lcd_common.h"
+#include <mach/rpc_pmapp.h>
 
 #define LCD_DEVICE_NAME "mipi_cmd_rsp61408_wvga"
 
 static lcd_panel_type lcd_panel_wvga = LCD_NONE;
 
+/*< DTS2011110706222 qitongliang 20111201 begin */
+/*mipi dsi register setting , help qualcomm to set.*/
 static struct mipi_dsi_phy_ctrl dsi_cmd_mode_phy_db = 
 {
     /* DSI Bit Clock at 300 MHz, 2 lane, RGB888 */ 
@@ -35,31 +39,44 @@ static struct mipi_dsi_phy_ctrl dsi_cmd_mode_phy_db =
 	0x01, 0x0f, 0x07, 
 	0x05, 0x14, 0x03, 0x0, 0x0, 0x0, 0x20, 0x0, 0x02, 0x0}, 
 };
+/* DTS2011110706222 qitongliang 20111201 end >*/
 
 static struct dsi_buf rsp61408_tx_buf;
 static struct sequence * rsp61408_lcd_init_table_debug = NULL;
 
+/*< DTS2011110302555 qitongliang 20111103 begin */
+/*LCD init code*/
 static const struct sequence rsp61408_wvga_standby_enter_table[]= 
 {
+	/*close Vsync singal,when lcd sleep in*/
 	{0x00034,MIPI_DCS_COMMAND,0},
 	{0x00000,TYPE_PARAMETER,0},
 	{0x00028,MIPI_DCS_COMMAND,0}, //28h
 	{0x00000,TYPE_PARAMETER,0},
+	/*< DTS2012021601331 duanfei 20120216 begin */
+	/*delay time is not very correctly right*/
 	{0x0010,MIPI_DCS_COMMAND,20},
 	{0x0000,TYPE_PARAMETER,0},
 	{0x00029,MIPI_TYPE_END,150}, // add new command for 
+	/* DTS2012021601331 duanfei 20120216 end >*/
 };
 static const struct sequence rsp61408_wvga_standby_exit_table[]= 
 {
+    /* <DTS2012030706470 liguosheng 20120313 begin */
+	/* solve losing control of the backlight */
 	{0x00011,MIPI_DCS_COMMAND,0}, //29h
 	{0x00000,TYPE_PARAMETER,0},
+	/*open Vsync singal,when lcd sleep out*/
 	{0x00035,MIPI_DCS_COMMAND,150},
 	{0x00000,TYPE_PARAMETER,0},
 	{0x00029,MIPI_DCS_COMMAND,0},
 	{0x00000,TYPE_PARAMETER,0},
 	{0x00029,MIPI_TYPE_END,0}, // add new command for 
+    /* DTS2012030706470 liguosheng 20120313 end> */
 };
+/* DTS2011110302555 qitongliang 20111103 end >*/
 
+/*lcd resume function*/
 static int mipi_rsp61408_lcd_on(struct platform_device *pdev)
 {
 	boolean para_debug_flag = FALSE;
@@ -97,6 +114,7 @@ static int mipi_rsp61408_lcd_on(struct platform_device *pdev)
 	return 0;
 }
 
+/*lcd suspend function*/
 static int mipi_rsp61408_lcd_off(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd;
@@ -106,6 +124,9 @@ static int mipi_rsp61408_lcd_off(struct platform_device *pdev)
 		return -ENODEV;
 	if (mfd->key != MFD_KEY)
 		return -EINVAL;
+
+	/* Hack! */
+	pmapp_disp_backlight_set_brightness(0);
 
 	process_mipi_table(mfd,&rsp61408_tx_buf,(struct sequence*)&rsp61408_wvga_standby_enter_table,
 		 ARRAY_SIZE(rsp61408_wvga_standby_enter_table), lcd_panel_wvga);
@@ -119,8 +140,10 @@ static int __devinit mipi_rsp61408_lcd_probe(struct platform_device *pdev)
 
 	return 0;
 }
+/*< DTS2011122306018 fengwei 20111224 begin */
 static struct sequence rsp61408_wvga_write_cabc_brightness_table[]= 
 {
+    /* <DTS2012030706470 liguosheng 20120313 begin */
 	/* solve losing control of the backlight */
 	{0x000B9,MIPI_GEN_COMMAND,0},
 	{0x00001,TYPE_PARAMETER,0},
@@ -128,7 +151,9 @@ static struct sequence rsp61408_wvga_write_cabc_brightness_table[]=
     {0x00002,TYPE_PARAMETER,0},
     {0x00018,TYPE_PARAMETER,0},
 	{0x00,MIPI_TYPE_END,0},
+    /* DTS2012030706470 liguosheng 20120313 end> */
 };
+/*lcd cabc control function*/
 void rsp61408_set_cabc_backlight(struct msm_fb_data_type *mfd,uint32 bl_level)
 {	
 	rsp61408_wvga_write_cabc_brightness_table[2].reg = bl_level; 
@@ -136,6 +161,7 @@ void rsp61408_set_cabc_backlight(struct msm_fb_data_type *mfd,uint32 bl_level)
 	process_mipi_table(mfd,&rsp61408_tx_buf,(struct sequence*)&rsp61408_wvga_write_cabc_brightness_table,
 		 ARRAY_SIZE(rsp61408_wvga_write_cabc_brightness_table), lcd_panel_wvga);
 }
+/* DTS2011122306018 fengwei 20111224 end >*/
 
 static struct platform_driver this_driver = {
 	.probe  = mipi_rsp61408_lcd_probe,
@@ -146,8 +172,11 @@ static struct platform_driver this_driver = {
 static struct msm_fb_panel_data rsp61408_panel_data = {
 	.on		= mipi_rsp61408_lcd_on,
 	.off	= mipi_rsp61408_lcd_off,
+/*< DTS2011122306018 fengwei 20111224 begin */
 	.set_backlight = pwm_set_backlight,
+	/*add cabc control backlight*/
 	.set_cabc_brightness = rsp61408_set_cabc_backlight,
+/* DTS2011122306018 fengwei 20111224 end >*/
 
 };
 static struct platform_device this_device = {
@@ -163,12 +192,16 @@ static int __init mipi_cmd_rsp61408_wvga_init(void)
 	int ret = 0;
 	struct msm_panel_info *pinfo = NULL;
 
+	/*< DTS2011122306018 fengwei 20111224 begin */
 	lcd_panel_wvga = get_lcd_panel_type();
+	/* DTS2011122306018 fengwei 20111224 end >*/
+	/* <DTS2012022501992 liguosheng 20120229 begin */
 	if ((MIPI_RSP61408_CHIMEI_WVGA!= lcd_panel_wvga )&&(MIPI_RSP61408_BYD_WVGA!= lcd_panel_wvga )
 		&&(MIPI_RSP61408_TRULY_WVGA!= lcd_panel_wvga))
 	{
 		return 0;
 	}
+	/* DTS2012022501992 liguosheng 20120229 end> */
 	pr_info("enter mipi_cmd_rsp61408_wvga_init \n");
 	mipi_dsi_buf_alloc(&rsp61408_tx_buf, DSI_BUF_SIZE);
 
@@ -182,10 +215,14 @@ static int __init mipi_cmd_rsp61408_wvga_init(void)
 		pinfo->pdest = DISPLAY_1;
 		pinfo->wait_cycle = 0;
 		pinfo->bpp = 24;		
+		/*< DTS2011111100746 fengwei 20111111 begin */
 		pinfo->bl_max = 255;
 		pinfo->bl_min = 30;		
+		/* DTS2011111100746 fengwei 20111111 end >*/
 		pinfo->fb_num = 2;
+		/*< DTS2011110706222 qitongliang 20111201 begin */
         pinfo->clk_rate = 300000000;
+		/* DTS2011110706222 qitongliang 20111201 end >*/
 		pinfo->lcd.refx100 = 6000; /* adjust refx100 to prevent tearing */
 
 		pinfo->mipi.mode = DSI_CMD_MODE;
@@ -199,8 +236,11 @@ static int __init mipi_cmd_rsp61408_wvga_init(void)
 		pinfo->mipi.stream = 0; /* dma_p */
 		pinfo->mipi.mdp_trigger = DSI_CMD_TRIGGER_SW;
 		pinfo->mipi.dma_trigger = DSI_CMD_TRIGGER_SW;
+		/*< DTS2011110801827 fengwei 20111207 begin */
+		/*set hw te sync*/
 		pinfo->lcd.hw_vsync_mode = TRUE;
 		pinfo->lcd.vsync_enable = TRUE;
+		/* DTS2011110801827 fengwei 20111207 end >*/
 		pinfo->mipi.te_sel = 1; /* TE from vsync gpio */
 		pinfo->mipi.interleave_max = 1;
 		pinfo->mipi.insert_dcs_cmd = TRUE;
@@ -221,3 +261,4 @@ static int __init mipi_cmd_rsp61408_wvga_init(void)
 }
 
 module_init(mipi_cmd_rsp61408_wvga_init);
+/* DTS2011090203258 fengwei 20110903 end >*/
