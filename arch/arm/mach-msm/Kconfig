@@ -1578,6 +1578,14 @@ config MSM_CPU_FREQ_MIN
 	depends on MSM_CPU_FREQ_SET_MIN_MAX
 	default 300000
 
+config MSM7X27AA_OVERCLOCK
+	bool "Enable overclock for MSM7X27AA"
+	depends on MSM_CPU_FREQ_SET_MIN_MAX
+	default n
+	help
+	  Enable overclock for MSM7X27AA (U8815/U8818). Make sure to set
+	  CONFIG_MSM_CPU_FREQ_MAX to 1008000.
+
 endif # CPU_FREQ_MSM
 
 config MSM_CPU_AVS
