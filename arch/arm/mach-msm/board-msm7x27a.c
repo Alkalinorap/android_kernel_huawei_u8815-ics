@@ -1813,6 +1813,59 @@ err_power_fail:
 	return 0;
 }
 
+/* modify function name and gpio config */
+static int set_touch_interrupt_gpio(void)
+{
+    int gpio_config = 0;
+    int ret = 0;
+  
+  gpio_config = GPIO_CFG(MSM_7X27A_TOUCH_INT_PIN,0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP,GPIO_CFG_2MA);
+  ret = gpio_tlmm_config(gpio_config, GPIO_CFG_ENABLE);
+  if (ret)
+  {
+    pr_err("%s:touch int gpio config failed\n", __func__);
+    return ret;
+  }
+  ret = gpio_request(MSM_7X27A_TOUCH_INT_PIN, "TOUCH_INT");
+  if (ret)
+  {
+    pr_err("%s:touch int gpio request failed\n", __func__);
+    return ret;
+  }
+  ret = gpio_direction_input(MSM_7X27A_TOUCH_INT_PIN);
+  if (ret)
+  {
+    pr_err("%s:touch int gpio input failed\n", __func__);
+    return ret;
+  }
+
+  return ret;
+}
+
+/*this function return reset gpio at 7x30 platform */
+static int get_touch_reset_gpio(void)
+{
+  return MSM_7x27A_TOUCH_RESET_PIN;
+}
+
+/*this function get the tp  resolution*/
+static int get_touch_resolution(struct tp_resolution_conversion *tp_resolution_type)
+{  
+  if (machine_is_msm7x27a_U8815())
+  {
+    tp_resolution_type->lcd_x = LCD_X_WVGA;
+    tp_resolution_type->lcd_y = LCD_Y_WVGA;   
+    tp_resolution_type->lcd_all = LCD_ALL_WVGA_4INCHTP;
+  }
+  else
+  {
+      tp_resolution_type->lcd_x = LCD_X_WVGA;
+    tp_resolution_type->lcd_y = LCD_Y_WVGA;   
+   tp_resolution_type->lcd_all = LCD_ALL_WVGA_4INCHTP;
+  }
+  return 1;
+}
+
 int touch_gpio_config_interrupt(void)
 {
 	gpio_request(MSM_7X27A_TOUCH_INT_PIN, "TOUCH_INT");
@@ -1915,12 +1968,12 @@ static int get_phone_version(struct tp_resolution_conversion *tp_resolution_type
 static struct touch_hw_platform_data touch_hw_data = 
 {
 	.touch_power = power_switch,
-	.touch_gpio_config_interrupt = touch_gpio_config_interrupt,
+	.set_touch_interrupt_gpio = set_touch_interrupt_gpio,
 	.set_touch_probe_flag = set_touch_probe_flag,
 	.read_touch_probe_flag = read_touch_probe_flag,
 	.touch_reset = touch_reset,
-	.get_touch_reset_pin = get_touch_reset_pin,
-	.get_phone_version = get_phone_version,
+	.get_touch_reset_gpio = get_touch_reset_gpio,
+	.get_touch_resolution = get_touch_resolution,
 };
 
 #ifdef CONFIG_HUAWEI_NFC_PN544

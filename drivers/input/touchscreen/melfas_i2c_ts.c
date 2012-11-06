@@ -50,6 +50,7 @@ module_param_named(melfas_debug, melfas_debug_mask, int, S_IRUGO | S_IWUSR | S_I
 		printk(KERN_ERR fmt, ##args); \
 		} \
 } while(0)
+/* add new variable */
 static bool first_int_flag = true;
 #define TS_X_OFFSET		1
 #define TS_Y_OFFSET		TS_X_OFFSET
@@ -103,7 +104,7 @@ struct melfas_ts_data {
 	struct hrtimer timer;	
 	int (*power)(struct i2c_client* client, int on);
 	struct early_suspend early_suspend;
-	
+
     bool is_first_point;
     bool use_touch_key;
     int reported_finger_count;
@@ -194,7 +195,7 @@ static int mcsdl_enter_download_mode(void)
 	ret = gpio_tlmm_config(GPIO_CFG(TS_SCL_GPIO, 2, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 
 	ret = gpio_tlmm_config(GPIO_CFG(TS_SDA_GPIO, 2, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
-	
+
 	mdelay(1);
 
 	read_data = i2c_smbus_read_byte(g_client);
@@ -692,7 +693,7 @@ static int proc_calc_metrics(char *page, char **start, off_t off, int count, int
 static int tp_read_input_name(void)
 {
 	int ret;
-	
+
 	query_i2c_msg_name[0].addr = g_client->addr;
 	query_i2c_msg_name[0].flags = 0;
 	query_i2c_msg_name[0].buf = &vision_reg;
@@ -708,7 +709,7 @@ static int tp_read_input_name(void)
 	{
 		printk(KERN_ERR "%s: i2c_transfer failed\n", __func__);
 	}
-	
+
 	return ret;
 
 }
@@ -753,6 +754,7 @@ static void clear_pressed_point_status(struct melfas_ts_data *ts)
     input_sync(ts->input_dev);
     memset(g_Mtouch_info, 0, sizeof(g_Mtouch_info));
 }
+/* add function to get module ID */
 #define OFILM_MODULE 0X00
 #define MUTTO_MODULE 0X01
 #define TRULY_MODULE 0X02
@@ -764,13 +766,9 @@ static void clear_pressed_point_status(struct melfas_ts_data *ts)
 static char touch_info[50] = {0};
 char * get_melfas_touch_info(void)
 {
-	int ret = 0;
 	char * module_name = NULL;
 
 	if (g_client == NULL)
-		return NULL;
-	ret = tp_read_input_name();
-	if (ret < 0)
 		return NULL;
 
 	switch(query_name[4])
@@ -799,7 +797,7 @@ char * get_melfas_touch_info(void)
 		default:
 			break;
 	}
-	
+
 	sprintf(touch_info,"melfas-%s.%d",module_name,query_name[2]);
 
 	return touch_info;
@@ -865,7 +863,7 @@ static void melfas_ts_work_func(struct work_struct *work)
 			}
         }
 	}
-		
+
     if(ret < 0) 
     {
         printk(KERN_ERR "melfas_ts_work_func: i2c failed\n");
@@ -883,13 +881,13 @@ static void melfas_ts_work_func(struct work_struct *work)
         {
             MELFAS_DEBUG("%s:register[0x%x]= 0x%x \n",__FUNCTION__, TS_READ_START_ADDR+k, buf[k]);
         }
-				 
+
 		for(i = 0; i < read_num; i = i + 6)  
 		{            
 			touchAction = ((buf[i] & 0x80) == 0x80);
 			touchType = (buf[i] & 0x60)>>5; 
 			fingerID = (buf[i] & 0x0F);
-			
+
 			MELFAS_DEBUG("%s:touchAction:0x%x,touchType:0x%x,fingerID:0x%x \n",__FUNCTION__,touchAction,touchType,fingerID);
 
 			if(touchType == TOUCH_TYPE_NONE)
@@ -903,7 +901,7 @@ static void melfas_ts_work_func(struct work_struct *work)
 				g_Mtouch_info[fingerID-1].fingerY = (buf[i + 1] & 0xF0) << 4 | buf[i + 3]; 
 				g_Mtouch_info[fingerID-1].width = buf[i + 4];   
 				g_Mtouch_info[fingerID-1].strength = buf[i + 5];  
-								
+
 
 				MELFAS_DEBUG(KERN_ERR "melfas_ts_work_func: Touch ID: %d, x: %d, y: %d, z: %d w: %d\n", 
 						i, g_Mtouch_info[fingerID-1].fingerX, g_Mtouch_info[fingerID-1].fingerY, g_Mtouch_info[fingerID-1].strength, g_Mtouch_info[fingerID-1].width);          
@@ -939,7 +937,7 @@ static void melfas_ts_work_func(struct work_struct *work)
 	}
 
     input_sync(ts->input_dev);
-		
+
 	if (ts->use_irq)
 	{
 	    enable_irq(ts->client->irq);
@@ -978,7 +976,7 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	int i;
 	struct touch_hw_platform_data *touch_pdata = NULL;
 	struct tp_resolution_conversion tp_type_self_check;
-	
+
 	TS_DEBUG_MELFAS(" In melfas_ts_probe: \n");
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) 
@@ -996,11 +994,12 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	}
 
     /* get reset pin */
-	if(touch_pdata->get_touch_reset_pin)
+	/* change function name */
+	if(touch_pdata->get_touch_reset_gpio)
 	{
-		reset_pin = touch_pdata->get_touch_reset_pin();
+		reset_pin = touch_pdata->get_touch_reset_gpio();
 	}
-	
+
 	if(touch_pdata->read_touch_probe_flag)
 	{
 		ret = touch_pdata->read_touch_probe_flag();
@@ -1026,9 +1025,10 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
         printk(KERN_ERR "%s: power on failed \n", __func__);
         goto err_check_functionality_failed;
     }
-	if(touch_pdata->get_phone_version)
+	/* change function name */
+	if(touch_pdata->get_touch_resolution)
     {
-        ret = touch_pdata->get_phone_version(&tp_type_self_check);
+        ret = touch_pdata->get_touch_resolution(&tp_type_self_check);
         if(ret < 0)
         {
             printk(KERN_ERR "%s: reset failed \n", __func__);
@@ -1046,7 +1046,7 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
 
 	melfas_ts_power(client,1);
 	msleep(200);  /* wait for device reset; */
-	
+
 	for(i = 0; i < 3; i++) 
 	{		
 		ret = i2c_smbus_read_byte_data(client, 0x00);
@@ -1078,14 +1078,14 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
 	{
 		printk("the tp input name is query error!\n ");
 	}
-	
+
 	d_entry = create_proc_entry("tp_hw_type", S_IRUGO | S_IWUSR | S_IWGRP, NULL);
 	if (d_entry) 
 	{
 		d_entry->read_proc = tp_read_proc;
 		d_entry->data = NULL;
 	}
-	
+
 	ts = kzalloc(sizeof(*ts), GFP_KERNEL);
 	if (ts == NULL) 
 	{
@@ -1104,7 +1104,7 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		goto err_destroy_wq;
 	}
 	INIT_WORK(&ts->work, melfas_ts_work_func);
-		
+
     ts->is_first_point = true;
     ts->support_multi_touch = client->flags;
 	/*delete some lines*/
@@ -1144,7 +1144,7 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
 		input_set_abs_params(ts->input_dev, ABS_PRESSURE, 0, 255, 0, 0);
 		input_set_abs_params(ts->input_dev, ABS_TOOL_WIDTH, 0, 255, 0, 0);
 	}
-	
+
 	ret = input_register_device(ts->input_dev);
 	if (ret) 
 	{
@@ -1162,12 +1162,13 @@ static int melfas_ts_probe(struct i2c_client *client, const struct i2c_device_id
     {
         touch_pdata->set_touch_probe_flag(1);
     }
-	
+
 	if (client->irq) 
     {
-		if(touch_pdata->touch_gpio_config_interrupt)
+		/* change function name */
+		if(touch_pdata->set_touch_interrupt_gpio)
 		{
-			ret = touch_pdata->touch_gpio_config_interrupt();		
+			ret = touch_pdata->set_touch_interrupt_gpio();		
 		}
 		if (ret < 0) 
 		{
@@ -1291,7 +1292,7 @@ static int melfas_ts_suspend(struct i2c_client *client, pm_message_t mesg)
 	int ret;
 	struct melfas_ts_data *ts = i2c_get_clientdata(client);
 	MELFAS_DEBUG("In melfas_ts_suspend\n");
-	
+
 	if (ts->use_irq)
 		disable_irq(client->irq);
 	else
@@ -1307,7 +1308,7 @@ static int melfas_ts_suspend(struct i2c_client *client, pm_message_t mesg)
 	{
 		pr_err("melfas_ts_suspend: power off failed\n");
 	}
-	
+
 	return 0;
 }
 
@@ -1335,7 +1336,7 @@ static int melfas_ts_resume(struct i2c_client *client)
 	}
 
 	msleep(200);  /* wait for device reset; */
-	
+
 	if (ts->use_irq) 
 	{
 		enable_irq(client->irq);
