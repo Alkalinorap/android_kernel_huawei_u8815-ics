@@ -2906,21 +2906,21 @@ static long msm_ioctl_config(struct file *filep, unsigned int cmd,
 		{
             /*Condition that the flash is tps61310 */
 #ifdef OMEGAMOON_CHANGED
-	printk("OMEGAMOON >>> this is the flashy part!!\n");
-	if(LED_FLASH == flash_info.flashtype)
-	{
-	 CDBG("tps61310_set_flash enter");
-	 rc = tps61310_set_flash(flash_info.ctrl_data.led_state);
-	}
+				printk("OMEGAMOON >>> this is the flashy part!!\n");
+				if(LED_FLASH == flash_info.flashtype)
+				{
+					CDBG("tps61310_set_flash enter");
+					rc = tps61310_set_flash(flash_info.ctrl_data.led_state);
+				}
 #else
-	 if(machine_is_msm8255_u8680())
-	{
-	 if(LED_FLASH == flash_info.flashtype)
-		{
-	 	 CDBG("tps61310_set_flash enter");
-	 	 rc = tps61310_set_flash(flash_info.ctrl_data.led_state);
-		}
-   	}
+			if(machine_is_msm8255_u8680())
+			{
+				if(LED_FLASH == flash_info.flashtype)
+				{
+					CDBG("tps61310_set_flash enter");
+					rc = tps61310_set_flash(flash_info.ctrl_data.led_state);
+				}
+			}
 #endif
             /*other flashes*/
 			else
