@@ -115,11 +115,6 @@ config CPU_FREQ_DEFAULT_GOV_SMARTASS2
 	help
 	  Use the CPUFreq governor 'smartassV2' as default.
 
-config CPU_FREQ_DEFAULT_GOV_INTERACTIVEX
-	bool "interactivex"
-	select CPU_FREQ_GOV_INTERACTIVEX
-	help
-	  Use the CPUFreq governor 'interactivex' as default.
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -230,6 +225,14 @@ config CPU_FREQ_GOV_INTERACTIVEX
 	depends on CPU_FREQ
 	help
 	  'InteractiveX' - Modified version of interactive with sleep+wake code.
+
+	  If in doubt, say N.
+	  
+config CPU_FREQ_GOV_SAVAGEDZEN
+	tristate "'savagedzen' cpufreq governor"
+	depends on CPU_FREQ
+	help
+	  'Savaged-Zen' - a "smartass" based governor
 
 	  If in doubt, say N.
 
