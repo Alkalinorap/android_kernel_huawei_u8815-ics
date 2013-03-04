@@ -2322,3 +2322,10 @@ config HUAWEI_RPC_CRASH_DEBUG
 	help
 	  Select Y if use rpc related logs.
 
+config FRAMEBUF_SELF_ADAPT_HACK
+	bool "Huawei framebuffer memory hack"
+	depends on FRAMEBUF_SELF_ADAPT
+	default n
+	help
+	  Select Y to add an extra 2^20 to the framebuffer memory region determined by Huawei's	
+	  bootloader if the space is too small for the framebuffer. This is useful for booting on the Gingerbread bootloader.
