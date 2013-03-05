@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -419,4 +418,3 @@ struct mt9p017_reg mt9p017_regs =
     .rec_settings = &mt9p017_recommend_settings[0],
     .rec_size     = ARRAY_SIZE(mt9p017_recommend_settings),
 };
-

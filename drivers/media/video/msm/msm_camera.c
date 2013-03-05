@@ -4138,7 +4138,7 @@ int msm_camera_drv_start(struct platform_device *dev,
 	struct msm_cam_device *pmsm = NULL;
 	struct msm_sync *sync;
 	int rc = -ENODEV;
-	
+
 #ifdef CONFIG_HUAWEI_CAMERA
 	struct msm_camera_sensor_info *sinfo;
 	static int camera_num;

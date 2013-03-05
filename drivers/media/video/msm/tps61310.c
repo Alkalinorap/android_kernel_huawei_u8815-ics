@@ -46,7 +46,7 @@ static int tps61310_i2c_write(struct i2c_client *client,
 		printk("tps61310_client is NULL!\n");
 		return -1;
 	}
-	
+
 	ret = i2c_smbus_write_byte_data(tps61310_client,reg,val);
 	if (ret < 0) {
 		printk("tps61310_i2c_write write error\n");
@@ -69,7 +69,7 @@ static int tps61310_i2c_read(struct i2c_client *client,uint8_t reg)
 	} else {
 		printk(" tps61310_i2c_read error\n ");
 	}
-		
+
 	return val;
 }
 static enum hrtimer_restart flash_timer_func(struct hrtimer *timer)
@@ -158,7 +158,7 @@ int tps61310_set_flash(unsigned led_state)
 
 static int tps61310_device_init(void)
 {	
-	
+
 	int err = 0;
 	int gpio_config;
 	err = gpio_request(tps61310_strb0, "tps61310_strb0");
@@ -187,7 +187,7 @@ static int tps61310_device_init(void)
 	err = gpio_request_one(tps61310_nreset,GPIOF_OUT_INIT_HIGH,"tps61310_nreset");
 	if(err)
 		printk("tps61310 gpio request: tps61310_nreset failed!\n");
-				
+
 	return err;
 }
 
@@ -196,7 +196,7 @@ static int tps61310_probe(struct i2c_client *client,
 {
 	int ret = -1;
 	int tempvalue = 0;
-	
+
 	printk("tps61310_probe start!\n");
 
 	tps61310_client = client;
@@ -213,7 +213,7 @@ static int tps61310_probe(struct i2c_client *client,
 	if ( tps61310_device_init()){
 		printk("tps61310_device_init error!\n");	
 	}
-	
+
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		ret = -ENODEV;
 	}
@@ -221,7 +221,7 @@ static int tps61310_probe(struct i2c_client *client,
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_I2C_BLOCK)){
 		ret = -ENODEV;
 	}
-	
+
 	/* read chip id */
 	tempvalue = tps61310_i2c_read(tps61310_client, 0x07);
 	if ((tempvalue & 0x07) == 0x06) {
@@ -229,7 +229,7 @@ static int tps61310_probe(struct i2c_client *client,
 	} else {
 		printk("tps61310 read chip id error!\n");
 	}
-	
+
 	printk("tps61310_probe end!\n");
 	return 0;
 }

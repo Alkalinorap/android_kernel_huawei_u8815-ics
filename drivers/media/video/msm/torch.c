@@ -73,7 +73,7 @@ struct msm_camera_sensor_flash_data hw_camera_led_data =
 static int hw_camera_led_open(struct inode *inode,struct file *file)
 {	
 	int ret = 0;
-	
+
 	CDBG("function %s enterence\n",__func__);
 	if(atomic_read(&flag)) ret = -1;
 	else atomic_set(&flag,1);
@@ -85,12 +85,12 @@ static long hw_camera_led_ioctl(struct file *filep ,unsigned int cmd, unsigned l
 {
 	int ret = 0;
 	unsigned int camera_led_state;
-	
+
 	CDBG("function %s enterence\n",__func__);
 	switch(cmd)
 	{
 		case CAMERA_LED_GET :
-			
+
 			camera_led_state = atomic_read(&camera_led_flag);
 			if(copy_to_user((void __user *)arg,&camera_led_state,sizeof(camera_led_state))) 
 			{
@@ -120,9 +120,9 @@ static long hw_camera_led_ioctl(struct file *filep ,unsigned int cmd, unsigned l
 		default:
 			pr_err("hw_camera_led_ioctl:error ioctl cmd");
 			ret = -EINVAL;
-		
+
 	}
-	
+
 	return ret;
 }
 
@@ -133,7 +133,7 @@ static int hw_camera_led_release(struct inode *inode,struct file *file)
 	CDBG("function %s enterence\n",__func__);
 	if(atomic_read(&flag)) atomic_set(&flag,0);
 	else ret = -1;
-	
+
 	return ret;
 }
 
@@ -160,4 +160,3 @@ static void __exit hw_camera_led_exit(void)
 
 module_init(hw_camera_led_init);
 module_exit(hw_camera_led_exit);
-

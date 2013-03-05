@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -2001,4 +2000,3 @@ static int __init mt9p017_init(void)
 }
 
 module_init(mt9p017_init);
-
