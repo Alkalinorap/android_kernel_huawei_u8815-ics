@@ -324,6 +324,7 @@ char *get_wifi_device_name(void);
 lcd_panel_type get_lcd_panel_type(void);
 hw_bt_device_model get_hw_bt_device_model(void);
 char *get_bt_device_name(void);
+char *get_baseband_version(void);
 hw_lcd_ctrl_bl_type get_hw_lcd_ctrl_bl_type(void);
 lcd_type get_hw_lcd_resolution_type(void);
 lcd_align_type get_lcd_align_type(void);
